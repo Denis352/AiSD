@@ -408,57 +408,11 @@ double evaluatePostfix(DynamicArray<string> postfix) {
     return stack.top();
 }
 
-void userInputMode() {
-    cout << "\n=== РЕЖИМ РУЧНОГО ВВОДА ===" << endl;
+int main() {
+    setlocale(LC_ALL, "Russian");
+    SetConsoleOutputCP(65001);
 
-    int size;
-    cout << "Введите размерность массива: ";
-    cin >> size;
-
-    if (size <= 0) {
-        cout << "Неверный размер массива!" << endl;
-        return;
-    }
-
-    DynamicArray<double> user_array;
-
-    cout << "Введите " << size << " элементов массива:" << endl;
-    for (int i = 0; i < size; i++) {
-        double value;
-        cout << "Элемент " << i + 1 << ": ";
-        cin >> value;
-        user_array.push_back(value);
-    }
-
-    cout << "\nВведенный массив:" << endl;
-    user_array.print();
-
-    cout << "\nДополнительные операции:" << endl;
-    cout << "Размер массива: " << user_array.size() << endl;
-    if (!user_array.empty()) {
-        cout << "Первый элемент: " << user_array[0] << endl;
-        cout << "Последний элемент: " << user_array.back() << endl;
-    }
-
-    cout << "\nСоздание двусвязного списка из введенных данных:" << endl;
-    DoublyLinkedList<double> user_list;
-    for (int i = 0; i < user_array.size(); i++) {
-        user_list.push_back(user_array[i]);
-    }
-    user_list.print();
-
-    cout << "\nСоздание стека из введенных данных:" << endl;
-    Stack<double> user_stack;
-    for (int i = 0; i < user_array.size(); i++) {
-        user_stack.push(user_array[i]);
-    }
-    user_stack.print();
-}
-
-void testMode() {
-    cout << "\n=== ТЕСТОВЫЕ ПРИМЕРЫ ===" << endl;
-
-    cout << "\n1. Тестирование двусвязного списка:" << endl;
+    cout << "1. Тестирование двусвязного списка:" << endl;
     DoublyLinkedList<int> list;
     list.push_back(10);
     list.push_back(20);
@@ -515,54 +469,6 @@ void testMode() {
             cout << "Ошибка: " << error << endl;
         }
     }
-
-    cout << "\n5. Ввод своего выражения:" << endl;
-    cout << "Введите выражение (разделяйте все пробелами): ";
-    cin.ignore();
-    string user_input;
-    getline(cin, user_input);
-
-    try {
-        DynamicArray<string> postfix = infixToPostfix(user_input);
-
-        cout << "Обратная польская запись: ";
-        postfix.print();
-
-        double result = evaluatePostfix(postfix);
-        cout << "Результат: " << result << endl;
-    }
-    catch (const char* error) {
-        cout << "Ошибка: " << error << endl;
-    }
-}
-
-int main() {
-    setlocale(LC_ALL, "Russian");
-    SetConsoleOutputCP(65001); // UTF-8
-
-    int choice;
-    do {
-        cout << "\nВыберите режим работы:" << endl;
-        cout << "1 - Тестовые примеры" << endl;
-        cout << "2 - Ручной ввод данных" << endl;
-        cout << "0 - Выход" << endl;
-        cout << "Ваш выбор: ";
-        cin >> choice;
-
-        switch (choice) {
-        case 1:
-            testMode();
-            break;
-        case 2:
-            userInputMode();
-            break;
-        case 0:
-            cout << "Выход из программы..." << endl;
-            break;
-        default:
-            cout << "Неверный выбор! Попробуйте снова." << endl;
-        }
-    } while (choice != 0);
 
     return 0;
 }
