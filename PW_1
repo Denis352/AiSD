@@ -2,8 +2,13 @@
 #include <string>
 #include <cmath>
 #include <windows.h>
+#include <sstream>
 
 using namespace std;
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 template <typename T>
 struct Node {
@@ -155,6 +160,28 @@ public:
         arr = new T[capacity];
     }
 
+    DynamicArray(const DynamicArray& other) {
+        capacity = other.capacity;
+        length = other.length;
+        arr = new T[capacity];
+        for (int i = 0; i < length; i++) {
+            arr[i] = other.arr[i];
+        }
+    }
+
+    DynamicArray& operator=(const DynamicArray& other) {
+        if (this != &other) {
+            delete[] arr;
+            capacity = other.capacity;
+            length = other.length;
+            arr = new T[capacity];
+            for (int i = 0; i < length; i++) {
+                arr[i] = other.arr[i];
+            }
+        }
+        return *this;
+    }
+
     ~DynamicArray() {
         delete[] arr;
     }
@@ -187,6 +214,11 @@ public:
         return arr[index];
     }
 
+    const T& operator[](int index) const {
+        if (index < 0 || index >= length) throw "Index out of bounds";
+        return arr[index];
+    }
+
     T back() {
         if (length == 0) throw "Array is empty";
         return arr[length - 1];
@@ -196,7 +228,7 @@ public:
         return length == 0;
     }
 
-    int size() {
+    int size() const {
         return length;
     }
 
@@ -252,21 +284,21 @@ public:
         }
         else {
             Stack<T> temp;
-            DoublyLinkedList<T> temp_list;
 
             while (!empty()) {
                 T value = top();
-                cout << value;
-                pop();
                 temp.push(value);
-                if (!empty()) {
-                    cout << " <- ";
-                }
+                pop();
             }
 
+            bool first = true;
             while (!temp.empty()) {
-                push(temp.top());
+                T value = temp.top();
+                if (!first) cout << " <- ";
+                cout << value;
+                push(value);
                 temp.pop();
+                first = false;
             }
             cout << " (верх)" << endl;
         }
@@ -286,6 +318,7 @@ int getPriority(string op) {
     if (op == "*" || op == "/") return 2;
     if (op == "^") return 3;
     if (isFunction(op)) return 4;
+    if (op == "u-") return 5;
     return 0;
 }
 
@@ -293,80 +326,43 @@ DynamicArray<string> infixToPostfix(string expression) {
     Stack<string> stack;
     DynamicArray<string> output;
 
-    string token = "";
+    stringstream ss(expression);
+    string token;
 
-    for (int i = 0; i < expression.length(); i++) {
-        char c = expression[i];
-
-        if (c == ' ') {
-            if (!token.empty()) {
-                output.push_back(token);
-                token = "";
-            }
-            continue;
+    while (ss >> token) {
+        if (token == "(") {
+            stack.push(token);
         }
-
-        if (isdigit(c)) {
-            token += c;
-        }
-        else if (isalpha(c)) {
-            token += c;
-        }
-        else if (c == '(') {
-            if (!token.empty()) {
-                output.push_back(token);
-                token = "";
-            }
-            stack.push("(");
-        }
-        else if (c == ')') {
-            if (!token.empty()) {
-                output.push_back(token);
-                token = "";
-            }
-
+        else if (token == ")") {
             while (!stack.empty() && stack.top() != "(") {
                 output.push_back(stack.top());
                 stack.pop();
             }
-
             if (!stack.empty() && stack.top() == "(") {
                 stack.pop();
             }
-
-            if (!stack.empty() && isFunction(stack.top())) {
-                output.push_back(stack.top());
-                stack.pop();
-            }
         }
-
-        else if (isOperator(string(1, c))) {
-            if (!token.empty()) {
-                output.push_back(token);
-                token = "";
-            }
-
-            string op = string(1, c);
-
-            if (op == "-" && (output.empty() || output.back() == "(")) {
-                op = "u-";
+        else if (isOperator(token)) {
+            if (token == "-" && (output.empty() || output.back() == "(")) {
+                token = "u-";
             }
 
             while (!stack.empty() && stack.top() != "(" &&
-                getPriority(stack.top()) >= getPriority(op)) {
+                getPriority(stack.top()) >= getPriority(token)) {
                 output.push_back(stack.top());
                 stack.pop();
             }
-
-            stack.push(op);
+            stack.push(token);
+        }
+        else {
+            output.push_back(token);
         }
     }
 
-    if (!token.empty()) {
-        output.push_back(token);
-    }
-
     while (!stack.empty()) {
+        if (stack.top() == "(") {
+            throw "Несбалансированные скобки";
+        }
         output.push_back(stack.top());
         stack.pop();
     }
@@ -384,33 +380,34 @@ double evaluatePostfix(DynamicArray<string> postfix) {
             stack.push(stod(token));
         }
         else if (token == "u-") {
+            if (stack.empty()) throw "Недостаточно операндов для унарного минуса";
             double a = stack.top(); stack.pop();
             stack.push(-a);
         }
         else if (isOperator(token)) {
+            if (stack.size() < 2) throw "Недостаточно операндов для оператора";
+
             double b = stack.top(); stack.pop();
             double a = stack.top(); stack.pop();
 
             if (token == "+") stack.push(a + b);
             else if (token == "-") stack.push(a - b);
             else if (token == "*") stack.push(a * b);
-            else if (token == "/") stack.push(a / b);
+            else if (token == "/") {
+                if (b == 0) throw "Деление на ноль";
+                stack.push(a / b);
+            }
             else if (token == "^") stack.push(pow(a, b));
         }
-        else if (isFunction(token)) {
-            double a = stack.top(); stack.pop();
-
-            if (token == "sin") stack.push(sin(a));
-            else if (token == "cos") stack.push(cos(a));
-        }
     }
+
+    if (stack.size() != 1) throw "Некорректное выражение";
 
     return stack.top();
 }
 
 int main() {
     setlocale(LC_ALL, "Russian");
-    SetConsoleOutputCP(65001);
 
     cout << "1. Тестирование двусвязного списка:" << endl;
     DoublyLinkedList<int> list;
@@ -423,6 +420,7 @@ int main() {
     cout << "Последний элемент: " << list.back() << endl;
     cout << "Размер: " << list.size() << endl;
 
+
     cout << "\n2. Тестирование динамического массива:" << endl;
     DynamicArray<int> arr;
     arr.push_back(100);
@@ -433,41 +431,66 @@ int main() {
     cout << "Элемент с индексом 1: " << arr[1] << endl;
     cout << "Размер: " << arr.size() << endl;
 
-    cout << "\n3. Тестирование стека:" << endl;
-    Stack<string> stack;
-    stack.push("первый");
-    stack.push("второй");
-    stack.push("третий");
-    stack.print();
-    cout << "Верхний элемент: " << stack.top() << endl;
-    cout << "Размер: " << stack.size() << endl;
 
-    cout << "\n4. Тестирование сортировочной станции:";
+    cout << "\n3. Тестирование стека:" << endl;
+    Stack<string> stack_test;
+    stack_test.push("первый");
+    stack_test.push("второй");
+    stack_test.push("третий");
+    stack_test.print();
+    cout << "Верхний элемент: " << stack_test.top() << endl;
+    cout << "Размер: " << stack_test.size() << endl;
+
+
+    cout << "\n4. Тестирование сортировочной станции:" << endl;
 
     string expressions[] = {
         "3 + 4 * 2",
-        " ( 1 + 2 ) * 3 ",
-        " sin ( 0 ) + cos ( 0 ) ",
-        " 2 ^ 3 ^ 2 ",
-        " -5 + 10 ",
-        " 3 + 4 * 2 / ( 1 - 5 ) ^ 2 "
     };
 
-    for (int i = 0; i < 6; i++) {
-        cout << "\nВыражение " << i + 1 << ": " << expressions[i] << endl;
+    cout << "\nВыражение: 3 + 4 * 2" << endl << expressions[0] << endl;
 
-        try {
-            DynamicArray<string> postfix = infixToPostfix(expressions[i]);
+    try {
+        DynamicArray<string> postfix = infixToPostfix(expressions[0]);
+        cout << "Обратная польская запись: ";
+        postfix.print();
 
-            cout << "Обратная польская запись: ";
-            postfix.print();
+        double result = evaluatePostfix(postfix);
+        cout << "Результат: " << result << endl;
+    }
+    catch (const char* error) {
+        cout << "Ошибка: " << error << endl;
+    }
 
-            double result = evaluatePostfix(postfix);
-            cout << "Результат: " << result << endl;
-        }
-        catch (const char* error) {
-            cout << "Ошибка: " << error << endl;
-        }
+
+    cout << "\n5. Ввод пользовательского выражения:" << endl;
+    cout << "=====================================" << endl;
+
+    string user_expression;
+    cout << "Введите математическое выражение (разделяйте все символы пробелами):" << endl;
+    cout << "Пример: 3 + 4 * 2" << endl;
+    cout << "Ваше выражение: ";
+
+    getline(cin, user_expression);
+
+    if (user_expression.empty()) {
+        user_expression = "2 + 3 * 4";
+        cout << "Используется выражение по умолчанию: " << user_expression << endl;
+    }
+
+    cout << "\nРезультат обработки вашего выражения:" << endl;
+    cout << "Исходное выражение: " << user_expression << endl;
+
+    try {
+        DynamicArray<string> user_postfix = infixToPostfix(user_expression);
+        cout << "Обратная польская запись: ";
+        user_postfix.print();
+
+        double user_result = evaluatePostfix(user_postfix);
+        cout << "Результат вычисления: " << user_result << endl;
+    }
+    catch (const char* error) {
+        cout << "Ошибка при обработке выражения: " << error << endl;
     }
 
     return 0;
