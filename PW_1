@@ -330,7 +330,10 @@ DynamicArray<string> infixToPostfix(string expression) {
     string token;
 
     while (ss >> token) {
-        if (token == "(") {
+        if (isFunction(token)) {
+            stack.push(token);
+        }
+        else if (token == "(") {
             stack.push(token);
         }
         else if (token == ")") {
@@ -341,9 +344,13 @@ DynamicArray<string> infixToPostfix(string expression) {
             if (!stack.empty() && stack.top() == "(") {
                 stack.pop();
             }
+            if (!stack.empty() && isFunction(stack.top())) {
+                output.push_back(stack.top());
+                stack.pop();
+            }
         }
         else if (isOperator(token)) {
-            if (token == "-" && (output.empty() || output.back() == "(")) {
+            if (token == "-" && (output.empty() || output.back() == "(" || isOperator(output.back()))) {
                 token = "u-";
             }
 
@@ -399,6 +406,16 @@ double evaluatePostfix(DynamicArray<string> postfix) {
             }
             else if (token == "^") stack.push(pow(a, b));
         }
+        else if (isFunction(token)) {
+            if (stack.empty()) throw "Недостаточно операндов для функции";
+
+            double a = stack.top(); stack.pop();
+
+            double radians = a * M_PI / 180.0;
+
+            if (token == "sin") stack.push(sin(radians));
+            else if (token == "cos") stack.push(cos(radians));
+        }
     }
 
     if (stack.size() != 1) throw "Некорректное выражение";
@@ -407,6 +424,8 @@ double evaluatePostfix(DynamicArray<string> postfix) {
 }
 
 int main() {
+    SetConsoleOutputCP(65001);
+    SetConsoleCP(65001);
     setlocale(LC_ALL, "Russian");
 
     cout << "1. Тестирование двусвязного списка:" << endl;
@@ -446,20 +465,23 @@ int main() {
 
     string expressions[] = {
         "3 + 4 * 2",
+        "sin ( 30 ) + cos ( 60 )",
     };
 
-    cout << "\nВыражение: 3 + 4 * 2" << endl << expressions[0] << endl;
+    for (int i = 0; i < 2; i++) {
+        cout << "\nВыражение " << i + 1 << ": " << expressions[i] << endl;
 
-    try {
-        DynamicArray<string> postfix = infixToPostfix(expressions[0]);
-        cout << "Обратная польская запись: ";
-        postfix.print();
+        try {
+            DynamicArray<string> postfix = infixToPostfix(expressions[i]);
+            cout << "Обратная польская запись: ";
+            postfix.print();
 
-        double result = evaluatePostfix(postfix);
-        cout << "Результат: " << result << endl;
-    }
-    catch (const char* error) {
-        cout << "Ошибка: " << error << endl;
+            double result = evaluatePostfix(postfix);
+            cout << "Результат: " << result << endl;
+        }
+        catch (const char* error) {
+            cout << "Ошибка: " << error << endl;
+        }
     }
 
 
