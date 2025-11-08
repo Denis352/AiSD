@@ -1,0 +1,6 @@
+﻿  AiSD_PW_2.cpp
+C:\Users\nils0\source\repos\AiSD_PW_2\AiSD_PW_2\AiSD_PW_2.cpp(53,15): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+C:\Users\nils0\source\repos\AiSD_PW_2\AiSD_PW_2\AiSD_PW_2.cpp(234,15): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+C:\Users\nils0\source\repos\AiSD_PW_2\AiSD_PW_2\AiSD_PW_2.cpp(244,15): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+C:\Users\nils0\source\repos\AiSD_PW_2\AiSD_PW_2\AiSD_PW_2.cpp(266,42): warning C4267: аргумент: преобразование из "size_t" в "int"; возможна потеря данных
+  AiSD_PW_2.vcxproj -> C:\Users\nils0\source\repos\AiSD_PW_2\x64\Debug\AiSD_PW_2.exe
