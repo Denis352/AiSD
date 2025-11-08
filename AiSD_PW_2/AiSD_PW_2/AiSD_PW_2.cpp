@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <vector>
 #include <algorithm>
 
@@ -7,6 +7,7 @@ using namespace std;
 class TimSort {
 private:
     vector<int> arr;
+    vector<int> original_arr;
     int minRun;
 
     int calculateMinRun(int n) {
@@ -23,6 +24,12 @@ private:
 
     void insertionSort(int left, int right) {
         cout << "Сортировка вставками диапазона [" << left << ", " << right << "]" << endl;
+        cout << "Исходный подмассив: ";
+        for (int i = left; i <= right; i++) {
+            cout << arr[i] << " ";
+        }
+        cout << endl;
+
         for (int i = left + 1; i <= right; i++) {
             int key = arr[i];
             int j = i - 1;
@@ -108,6 +115,18 @@ private:
     void mergeWithGallop(int left, int mid, int right) {
         cout << "Слияние run [" << left << ", " << mid << "] и [" << (mid + 1) << ", " << right << "]" << endl;
 
+        cout << "Левый run: ";
+        for (int i = left; i <= mid; i++) {
+            cout << arr[i] << " ";
+        }
+        cout << endl;
+
+        cout << "Правый run: ";
+        for (int i = mid + 1; i <= right; i++) {
+            cout << arr[i] << " ";
+        }
+        cout << endl;
+
         int len1 = mid - left + 1;
         int len2 = right - mid;
 
@@ -141,10 +160,9 @@ private:
             }
             k++;
 
-            // Активация режима галопа
             if (abs(gallopCount) >= GALLOP_THRESHOLD && !gallopActivated) {
                 gallopActivated = true;
-                cout << "\n>>> АКТИВИРОВАН РЕЖИМ ГАЛОПА! <<<" << endl;
+                cout << "\n>>> Активирован режим галопа! <<<" << endl;
                 if (gallopCount > 0) {
                     cout << "Обнаружено " << gallopCount << " последовательных элементов из левого run" << endl;
                     cout << "Текущий элемент левого run: " << leftArr[i] << endl;
@@ -188,7 +206,6 @@ private:
             }
         }
 
-        // Копируем оставшиеся элементы
         while (i < len1) {
             arr[k] = leftArr[i];
             i++;
@@ -221,11 +238,9 @@ private:
             cout << "Обрабатываем подмассив [" << i << ", " << end << "]" << endl;
             insertionSort(i, end);
         }
-        cout << "Завершена начальная сортировка вставками\n" << endl;
     }
 
     void mergeRuns() {
-        cout << "Слияние run:" << endl;
         int n = arr.size();
 
         for (int size = minRun; size < n; size = 2 * size) {
@@ -247,20 +262,28 @@ private:
     }
 
 public:
-    TimSort(vector<int>& input) : arr(input) {
+    TimSort(vector<int>& input) : arr(input), original_arr(input) {
         minRun = calculateMinRun(arr.size());
     }
 
     void sort() {
-        cout << "НАЧАЛО СОРТИРОВКИ TIMSORT\n" << endl;
-
+        cout << "Начальная сортировка вставками: " << endl << endl;
+        arr = original_arr;
         initialInsertionSort();
 
+        cout << "Поиск и сортировка run: " << endl << endl;
+        arr = original_arr;
+        cout << "Исходный массив: ";
+        printArray();
+        cout << endl;
         findAndSortRuns();
 
+        cout << "Слияние run: " << endl;
+        arr = original_arr;
+        initialInsertionSort();
+        findAndSortRuns();
         mergeRuns();
 
-        cout << "СОРТИРОВКА ЗАВЕРШЕНА" << endl;
     }
 
     void printArray() {
@@ -301,8 +324,6 @@ int main() {
         cout << num << " ";
     }
     cout << endl;
-
-    cout << "\nПОЛНАЯ РЕАЛИЗАЦИЯ TIMSORT:" << endl;
 
     vector<int> arr1 = arr;
     TimSort sorter(arr1);

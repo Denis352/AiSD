@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{d23e9af7-acde-471f-8310-e997331dfe09}</ProjectGuid>
-    <RootNamespace>Laba2AiSD</RootNamespace>
+    <ProjectGuid>{cf2901cf-69d6-4faa-bafe-e7711aeaa2b6}</ProjectGuid>
+    <RootNamespace>AiSDPW2</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -127,7 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Laba_2_AiSD.cpp" />
+    <ClCompile Include="AiSD_PW_2.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
