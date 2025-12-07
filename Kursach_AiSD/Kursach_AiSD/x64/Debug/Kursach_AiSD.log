@@ -1,0 +1,5 @@
+﻿  Kursach_AiSD.cpp
+C:\Users\nils0\source\repos\Kursach_AiSD\Kursach_AiSD\Kursach_AiSD.cpp(25,19): warning C4244: инициализация: преобразование "__int64" в "int", возможна потеря данных
+C:\Users\nils0\source\repos\Kursach_AiSD\Kursach_AiSD\Kursach_AiSD.cpp(83,22): warning C4244: инициализация: преобразование "__int64" в "int", возможна потеря данных
+C:\Users\nils0\source\repos\Kursach_AiSD\Kursach_AiSD\Kursach_AiSD.cpp(84,22): warning C4244: инициализация: преобразование "__int64" в "int", возможна потеря данных
+  Kursach_AiSD.vcxproj -> C:\Users\nils0\source\repos\Kursach_AiSD\x64\Debug\Kursach_AiSD.exe

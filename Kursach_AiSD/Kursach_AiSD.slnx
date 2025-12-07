@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Kursach_AiSD/Kursach_AiSD.vcxproj" Id="c335c562-f3b5-49a5-afff-d82d43077cbf" />
+</Solution>
