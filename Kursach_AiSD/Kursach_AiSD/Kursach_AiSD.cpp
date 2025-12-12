@@ -1,182 +1,137 @@
 ﻿#include <iostream>
 #include <fstream>
-#include <vector>
 #include <string>
-#include <algorithm>
-#include <map>
-#include <sstream>
-#include <queue>
-#include <stack>
 
 using namespace std;
 
-class AdjacencyMatrix {
-private:
-    vector<vector<int>> matrix;
-    vector<string> vertices;
+struct Edge {
+    string u, v;
+    int weight;
 
-public:
-    AdjacencyMatrix(const vector<string>& verts, const vector<vector<int>>& mat)
-        : vertices(verts), matrix(mat) {
-    }
-
-    vector<pair<string, int>> getNeighbors(const string& vertex) const {
-        vector<pair<string, int>> neighbors;
-        int index = find(vertices.begin(), vertices.end(), vertex) - vertices.begin();
-
-        if (index < vertices.size()) {
-            for (size_t i = 0; i < vertices.size(); ++i) {
-                if (matrix[index][i] > 0) {
-                    neighbors.push_back({ vertices[i], matrix[index][i] });
-                }
-            }
-        }
-        return neighbors;
-    }
-
-    const vector<string>& getVertices() const { return vertices; }
+    Edge() : weight(0) {}
+    Edge(const string& u, const string& v, int w) : u(u), v(v), weight(w) {}
 };
 
-class AdjacencyList {
+class EdgeArray {
 private:
-    map<string, vector<pair<string, int>>> list;
+    Edge* edges;
+    int capacity;
+    int size;
+
+    void resize() {
+        capacity = capacity == 0 ? 1 : capacity * 2;
+        Edge* newEdges = new Edge[capacity];
+        for (int i = 0; i < size; i++) {
+            newEdges[i] = edges[i];
+        }
+        delete[] edges;
+        edges = newEdges;
+    }
 
 public:
-    void addEdge(const string& u, const string& v, int weight) {
-        list[u].push_back({ v, weight });
-        list[v].push_back({ u, weight });
+    EdgeArray() : edges(nullptr), capacity(0), size(0) {}
+
+    ~EdgeArray() {
+        delete[] edges;
     }
 
-    vector<pair<string, int>> getNeighbors(const string& vertex) const {
-        auto it = list.find(vertex);
-        if (it != list.end()) {
-            return it->second;
-        }
-        return {};
+    void add(const Edge& e) {
+        if (size >= capacity) resize();
+        edges[size++] = e;
     }
 
-    vector<string> getVertices() const {
-        vector<string> vertices;
-        for (const auto& pair : list) {
-            vertices.push_back(pair.first);
-        }
-        return vertices;
+    Edge& operator[](int index) {
+        return edges[index];
     }
 
-    void clear() { list.clear(); }
+    const Edge& operator[](int index) const {
+        return edges[index];
+    }
+
+    int getSize() const { return size; }
+
+    bool isEmpty() const { return size == 0; }
 };
 
-class IncidenceMatrix {
+class StringArray {
 private:
-    vector<string> vertices;
-    vector<vector<int>> matrix;
-    vector<tuple<string, string, int>> edges;
+    string* data;
+    int capacity;
+    int size;
+
+    void resize() {
+        capacity = capacity == 0 ? 1 : capacity * 2;
+        string* newData = new string[capacity];
+        for (int i = 0; i < size; i++) {
+            newData[i] = data[i];
+        }
+        delete[] data;
+        data = newData;
+    }
 
 public:
-    IncidenceMatrix(const vector<string>& verts, const vector<tuple<string, string, int>>& edgesList)
-        : vertices(verts) {
-        matrix.resize(vertices.size(), vector<int>(edgesList.size(), 0));
-        edges = edgesList;
+    StringArray() : data(nullptr), capacity(0), size(0) {}
 
-        for (size_t edgeIdx = 0; edgeIdx < edgesList.size(); ++edgeIdx) {
-            auto [u, v, w] = edgesList[edgeIdx];
-            int uIdx = find(vertices.begin(), vertices.end(), u) - vertices.begin();
-            int vIdx = find(vertices.begin(), vertices.end(), v) - vertices.begin();
-
-            if (uIdx < vertices.size()) matrix[uIdx][edgeIdx] = 1;
-            if (vIdx < vertices.size()) matrix[vIdx][edgeIdx] = 1;
-        }
+    ~StringArray() {
+        delete[] data;
     }
 
-    void printMatrix() const {
-        cout << "Матрица инцидентности:" << endl;
-        cout << "Вершины/Ребра: ";
-        for (size_t i = 0; i < edges.size(); ++i) {
-            auto [u, v, w] = edges[i];
-            cout << u << "-" << v << " ";
-        }
-        cout << endl;
+    void add(const string& s) {
+        if (size >= capacity) resize();
+        data[size++] = s;
+    }
 
-        for (size_t i = 0; i < vertices.size(); ++i) {
-            cout << vertices[i] << ": ";
-            for (size_t j = 0; j < edges.size(); ++j) {
-                cout << matrix[i][j] << " ";
-            }
-            cout << endl;
+    string& operator[](int index) {
+        return data[index];
+    }
+
+    const string& operator[](int index) const {
+        return data[index];
+    }
+
+    int getSize() const { return size; }
+
+    bool isEmpty() const { return size == 0; }
+
+    int find(const string& s) const {
+        for (int i = 0; i < size; i++) {
+            if (data[i] == s) return i;
         }
+        return -1;
     }
 };
-
-void DFS(const AdjacencyList& graph, const string& start, map<string, bool>& visited) {
-    stack<string> s;
-    s.push(start);
-
-    cout << "DFS обход: ";
-
-    while (!s.empty()) {
-        string current = s.top();
-        s.pop();
-
-        if (!visited[current]) {
-            visited[current] = true;
-            cout << current << " ";
-
-            auto neighbors = graph.getNeighbors(current);
-            for (const auto& [neighbor, weight] : neighbors) {
-                if (!visited[neighbor]) {
-                    s.push(neighbor);
-                }
-            }
-        }
-    }
-    cout << endl;
-}
-
-void BFS(const AdjacencyList& graph, const string& start, map<string, bool>& visited) {
-    queue<string> q;
-    q.push(start);
-    visited[start] = true;
-
-    cout << "BFS обход: ";
-
-    while (!q.empty()) {
-        string current = q.front();
-        q.pop();
-        cout << current << " ";
-
-        auto neighbors = graph.getNeighbors(current);
-        for (const auto& [neighbor, weight] : neighbors) {
-            if (!visited[neighbor]) {
-                visited[neighbor] = true;
-                q.push(neighbor);
-            }
-        }
-    }
-    cout << endl;
-}
-
 
 class DSU {
 private:
-    map<string, string> parent;
-    map<string, int> rank;
+    int* parent;
+    int* rank;
+    int n;
 
 public:
-    void makeSet(const string& x) {
-        parent[x] = x;
-        rank[x] = 0;
+    DSU(int size) : n(size) {
+        parent = new int[n];
+        rank = new int[n];
+        for (int i = 0; i < n; i++) {
+            parent[i] = i;
+            rank[i] = 0;
+        }
     }
 
-    string find(const string& x) {
+    ~DSU() {
+        delete[] parent;
+        delete[] rank;
+    }
+
+    int find(int x) {
         if (parent[x] != x) {
             parent[x] = find(parent[x]);
         }
         return parent[x];
     }
 
-    void unite(const string& x, const string& y) {
-        string xRoot = find(x);
-        string yRoot = find(y);
+    void unite(int x, int y) {
+        int xRoot = find(x);
+        int yRoot = find(y);
 
         if (xRoot == yRoot) return;
 
@@ -193,138 +148,350 @@ public:
     }
 };
 
+void sortEdgesByWeight(EdgeArray& edges) {
+    for (int i = 0; i < edges.getSize() - 1; i++) {
+        for (int j = 0; j < edges.getSize() - i - 1; j++) {
+            if (edges[j].weight > edges[j + 1].weight) {
+                Edge temp = edges[j];
+                edges[j] = edges[j + 1];
+                edges[j + 1] = temp;
+            }
+        }
+    }
+}
 
-struct Edge {
-    string u, v;
-    int weight;
-    Edge(string u, string v, int w) : u(u), v(v), weight(w) {}
+class Stack {
+private:
+    string* data;
+    int capacity;
+    int topIndex;
 
-    bool operator<(const Edge& other) const {
-        if (u != other.u) return u < other.u;
-        return v < other.v;
+    void resize() {
+        capacity = capacity == 0 ? 1 : capacity * 2;
+        string* newData = new string[capacity];
+        for (int i = 0; i <= topIndex; i++) {
+            newData[i] = data[i];
+        }
+        delete[] data;
+        data = newData;
+    }
+
+public:
+    Stack() : data(nullptr), capacity(0), topIndex(-1) {}
+
+    ~Stack() {
+        delete[] data;
+    }
+
+    void push(const string& s) {
+        if (topIndex + 1 >= capacity) resize();
+        data[++topIndex] = s;
+    }
+
+    string pop() {
+        if (topIndex >= 0) {
+            return data[topIndex--];
+        }
+        return "";
+    }
+
+    bool isEmpty() const {
+        return topIndex < 0;
     }
 };
 
-bool compareEdgesByWeight(const Edge& a, const Edge& b) {
-    return a.weight < b.weight;
-}
+class Queue {
+private:
+    string* data;
+    int capacity;
+    int front;
+    int rear;
+    int count;
 
-vector<Edge> kruskal(const vector<Edge>& edges, const vector<string>& vertices) {
-    vector<Edge> sortedEdges = edges;
-    sort(sortedEdges.begin(), sortedEdges.end(), compareEdgesByWeight);
+    void resize() {
+        capacity = capacity == 0 ? 1 : capacity * 2;
+        string* newData = new string[capacity];
 
-    DSU dsu;
-    for (const auto& v : vertices) {
-        dsu.makeSet(v);
+        for (int i = 0; i < count; i++) {
+            newData[i] = data[(front + i) % (capacity / 2)];
+        }
+
+        delete[] data;
+        data = newData;
+        front = 0;
+        rear = count;
     }
 
-    vector<Edge> mst;
-    for (const auto& edge : sortedEdges) {
-        if (dsu.find(edge.u) != dsu.find(edge.v)) {
-            mst.push_back(edge);
-            dsu.unite(edge.u, edge.v);
+public:
+    Queue() : data(nullptr), capacity(0), front(0), rear(0), count(0) {}
+
+    ~Queue() {
+        delete[] data;
+    }
+
+    void enqueue(const string& s) {
+        if (count >= capacity) resize();
+        data[rear] = s;
+        rear = (rear + 1) % capacity;
+        count++;
+    }
+
+    string dequeue() {
+        if (count > 0) {
+            string s = data[front];
+            front = (front + 1) % capacity;
+            count--;
+            return s;
+        }
+        return "";
+    }
+
+    bool isEmpty() const {
+        return count == 0;
+    }
+};
+
+void DFS(int** matrix, const StringArray& vertices, int start, bool* visited) {
+    Stack stack;
+    stack.push(vertices[start]);
+
+    cout << "DFS обход: ";
+
+    while (!stack.isEmpty()) {
+        string current = stack.pop();
+        int currentIdx = vertices.find(current);
+
+        if (!visited[currentIdx]) {
+            visited[currentIdx] = true;
+            cout << current << " ";
+
+            for (int i = 0; i < vertices.getSize(); i++) {
+                if (matrix[currentIdx][i] > 0 && !visited[i]) {
+                    stack.push(vertices[i]);
+                }
+            }
+        }
+    }
+    cout << endl;
+}
+
+void BFS(int** matrix, const StringArray& vertices, int start, bool* visited) {
+    Queue queue;
+    queue.enqueue(vertices[start]);
+    visited[start] = true;
+
+    cout << "BFS обход: ";
+
+    while (!queue.isEmpty()) {
+        string current = queue.dequeue();
+        cout << current << " ";
+
+        int currentIdx = vertices.find(current);
+        for (int i = 0; i < vertices.getSize(); i++) {
+            if (matrix[currentIdx][i] > 0 && !visited[i]) {
+                visited[i] = true;
+                queue.enqueue(vertices[i]);
+            }
+        }
+    }
+    cout << endl;
+}
+
+bool readGraph(const string& filename, StringArray& vertices, int**& matrix, EdgeArray& edges) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Ошибка: не удалось открыть файл " << filename << endl;
+        return false;
+    }
+
+    string line;
+    if (!getline(file, line)) {
+        cerr << "Ошибка: файл пуст" << endl;
+        return false;
+    }
+
+    string current;
+    for (char c : line) {
+        if (c == ' ' && !current.empty()) {
+            vertices.add(current);
+            current.clear();
+        }
+        else if (c != ' ') {
+            current += c;
+        }
+    }
+    if (!current.empty()) {
+        vertices.add(current);
+    }
+
+    int n = vertices.getSize();
+    if (n == 0) {
+        cerr << "Ошибка: нет вершин в файле" << endl;
+        return false;
+    }
+
+    matrix = new int* [n];
+    for (int i = 0; i < n; i++) {
+        matrix[i] = new int[n];
+        for (int j = 0; j < n; j++) {
+            matrix[i][j] = 0;
+        }
+    }
+
+    // Чтение матрицы смежности
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            if (!(file >> matrix[i][j])) {
+                cerr << "Ошибка чтения матрицы на позиции [" << i << "," << j << "]" << endl;
+                for (int k = 0; k <= i; k++) {
+                    delete[] matrix[k];
+                }
+                delete[] matrix;
+                return false;
+            }
+            if (j > i && matrix[i][j] > 0) {
+                edges.add(Edge(vertices[i], vertices[j], matrix[i][j]));
+            }
+        }
+    }
+
+    file.close();
+    return true;
+}
+
+EdgeArray kruskal(EdgeArray& allEdges, const StringArray& vertices) {
+    EdgeArray sortedEdges;
+
+    for (int i = 0; i < allEdges.getSize(); i++) {
+        sortedEdges.add(allEdges[i]);
+    }
+
+    sortEdgesByWeight(sortedEdges);
+
+    DSU dsu(vertices.getSize());
+
+    EdgeArray mst;
+
+    for (int i = 0; i < sortedEdges.getSize(); i++) {
+        const Edge& edge = sortedEdges[i];
+        int uIdx = vertices.find(edge.u);
+        int vIdx = vertices.find(edge.v);
+
+        if (uIdx != -1 && vIdx != -1 && dsu.find(uIdx) != dsu.find(vIdx)) {
+            mst.add(edge);
+            dsu.unite(uIdx, vIdx);
         }
     }
 
     return mst;
 }
 
-vector<Edge> readGraphAndBuildStructures(const string& filename,
-    AdjacencyMatrix& adjMatrix,
-    AdjacencyList& adjList,
-    IncidenceMatrix& incMatrix) {
-    ifstream file(filename);
-    if (!file.is_open()) {
-        cerr << "Не удалось открыть файл: " << filename << endl;
-        exit(1);
+void printResult(const EdgeArray& mst) {
+    if (mst.isEmpty()) {
+        cout << "Граф не связан или пуст" << endl;
+        return;
     }
 
-    string line;
-    getline(file, line);
-    stringstream ss(line);
-    vector<string> vertices;
-    string vertex;
-
-    while (ss >> vertex) {
-        vertices.push_back(vertex);
+    EdgeArray sortedMst;
+    for (int i = 0; i < mst.getSize(); i++) {
+        sortedMst.add(mst[i]);
     }
 
-    vector<vector<int>> matrix(vertices.size(), vector<int>(vertices.size()));
-    for (size_t i = 0; i < vertices.size(); ++i) {
-        for (size_t j = 0; j < vertices.size(); ++j) {
-            file >> matrix[i][j];
-        }
-    }
-    file.close();
+    for (int i = 0; i < sortedMst.getSize() - 1; i++) {
+        for (int j = 0; j < sortedMst.getSize() - i - 1; j++) {
+            string u1 = sortedMst[j].u;
+            string v1 = sortedMst[j].v;
+            string u2 = sortedMst[j + 1].u;
+            string v2 = sortedMst[j + 1].v;
 
-    vector<Edge> edges;
-    vector<tuple<string, string, int>> edgesForIncMatrix;
+            if (u1 > v1) {
+                string temp = u1;
+                u1 = v1;
+                v1 = temp;
+            }
+            if (u2 > v2) {
+                string temp = u2;
+                u2 = v2;
+                v2 = temp;
+            }
 
-    adjList.clear();
-
-    for (size_t i = 0; i < vertices.size(); ++i) {
-        for (size_t j = i + 1; j < vertices.size(); ++j) {
-            if (matrix[i][j] > 0) {
-                edges.push_back(Edge(vertices[i], vertices[j], matrix[i][j]));
-                edgesForIncMatrix.push_back({ vertices[i], vertices[j], matrix[i][j] });
-                adjList.addEdge(vertices[i], vertices[j], matrix[i][j]);
+            if (u1 > u2 || (u1 == u2 && v1 > v2)) {
+                Edge temp = sortedMst[j];
+                sortedMst[j] = sortedMst[j + 1];
+                sortedMst[j + 1] = temp;
             }
         }
     }
 
-    adjMatrix = AdjacencyMatrix(vertices, matrix);
-    incMatrix = IncidenceMatrix(vertices, edgesForIncMatrix);
-
-    return edges;
-}
-
-void printResult(const vector<Edge>& mst) {
-    vector<Edge> sortedMst = mst;
-
-    for (auto& edge : sortedMst) {
-        if (edge.u > edge.v) {
-            swap(edge.u, edge.v);
-        }
-    }
-
-    sort(sortedMst.begin(), sortedMst.end());
-
     int totalWeight = 0;
-    cout << "Минимальное остовное дерево:" << endl;
-    for (const auto& edge : sortedMst) {
-        cout << edge.u << " " << edge.v << endl;
-        totalWeight += edge.weight;
+    cout << "\nМинимальное остовное дерево:" << endl;
+    for (int i = 0; i < sortedMst.getSize(); i++) {
+        cout << sortedMst[i].u << " " << sortedMst[i].v << endl;
+        totalWeight += sortedMst[i].weight;
     }
     cout << "Суммарный вес: " << totalWeight << endl;
 }
 
+void freeMatrix(int** matrix, int n) {
+    if (matrix) {
+        for (int i = 0; i < n; i++) {
+            delete[] matrix[i];
+        }
+        delete[] matrix;
+    }
+}
+
 int main() {
     setlocale(LC_ALL, "Russian");
+
+    cout << "=== Алгоритм Краскала для поиска минимального остовного дерева ===" << endl;
+    cout << "=== Реализация для курсовой работы ===" << endl;
+
     string filename;
-    cout << "Введите имя файла с матрицей смежности: ";
+    cout << "\nВведите имя файла с матрицей смежности: ";
     cin >> filename;
 
-    AdjacencyMatrix adjMatrix({}, {});
-    AdjacencyList adjList;
-    IncidenceMatrix incMatrix({}, {});
+    StringArray vertices;
+    EdgeArray edges;
+    int** matrix = nullptr;
 
-    vector<Edge> edges = readGraphAndBuildStructures(filename, adjMatrix, adjList, incMatrix);
-    vector<string> vertices = adjList.getVertices();
-
-    if (!vertices.empty()) {
-        map<string, bool> visitedDFS, visitedBFS;
-
-        for (const auto& v : vertices) visitedDFS[v] = false;
-        DFS(adjList, vertices[0], visitedDFS);
-
-        for (const auto& v : vertices) visitedBFS[v] = false;
-        BFS(adjList, vertices[0], visitedBFS);
+    if (!readGraph(filename, vertices, matrix, edges)) {
+        cout << "Ошибка загрузки графа. Проверьте файл." << endl;
+        return 1;
     }
 
-    incMatrix.printMatrix();
+    int n = vertices.getSize();
+    cout << "\nЗагружен граф:" << endl;
+    cout << "Вершин: " << n << endl;
+    cout << "Ребер: " << edges.getSize() << endl;
 
-    vector<Edge> mst = kruskal(edges, vertices);
+    if (n > 0) {
+        bool* visitedDFS = new bool[n];
+        bool* visitedBFS = new bool[n];
+
+        for (int i = 0; i < n; i++) {
+            visitedDFS[i] = false;
+            visitedBFS[i] = false;
+        }
+
+        cout << "\n--- Обходы графа ---" << endl;
+        DFS(matrix, vertices, 0, visitedDFS);
+        BFS(matrix, vertices, 0, visitedBFS);
+
+        delete[] visitedDFS;
+        delete[] visitedBFS;
+    }
+
+    cout << "\n--- Алгоритм Краскала ---" << endl;
+    EdgeArray mst = kruskal(edges, vertices);
     printResult(mst);
+
+    freeMatrix(matrix, n);
+
+    cout << "\nПрограмма успешно завершена!" << endl;
+    cout << "Нажмите Enter для выхода...";
+    cin.ignore();
+    cin.get();
 
     return 0;
 }
