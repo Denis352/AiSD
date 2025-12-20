@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <fstream>
 #include <string>
 
@@ -255,7 +255,7 @@ void DFS(int** matrix, const StringArray& vertices, int start, bool* visited) {
     Stack stack;
     stack.push(vertices[start]);
 
-    cout << "DFS обход: ";
+    cout << "DFS traversal: ";
 
     while (!stack.isEmpty()) {
         string current = stack.pop();
@@ -280,7 +280,7 @@ void BFS(int** matrix, const StringArray& vertices, int start, bool* visited) {
     queue.enqueue(vertices[start]);
     visited[start] = true;
 
-    cout << "BFS обход: ";
+    cout << "BFS traversal: ";
 
     while (!queue.isEmpty()) {
         string current = queue.dequeue();
@@ -300,13 +300,13 @@ void BFS(int** matrix, const StringArray& vertices, int start, bool* visited) {
 bool readGraph(const string& filename, StringArray& vertices, int**& matrix, EdgeArray& edges) {
     ifstream file(filename);
     if (!file.is_open()) {
-        cerr << "Ошибка: не удалось открыть файл " << filename << endl;
+        cerr << "Error: could not open file " << filename << endl;
         return false;
     }
 
     string line;
     if (!getline(file, line)) {
-        cerr << "Ошибка: файл пуст" << endl;
+        cerr << "Error: file is empty" << endl;
         return false;
     }
 
@@ -326,7 +326,7 @@ bool readGraph(const string& filename, StringArray& vertices, int**& matrix, Edg
 
     int n = vertices.getSize();
     if (n == 0) {
-        cerr << "Ошибка: нет вершин в файле" << endl;
+        cerr << "Error: no vertices in file" << endl;
         return false;
     }
 
@@ -338,11 +338,11 @@ bool readGraph(const string& filename, StringArray& vertices, int**& matrix, Edg
         }
     }
 
-    // Чтение матрицы смежности
+    // Reading adjacency matrix
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
             if (!(file >> matrix[i][j])) {
-                cerr << "Ошибка чтения матрицы на позиции [" << i << "," << j << "]" << endl;
+                cerr << "Error reading matrix at position [" << i << "," << j << "]" << endl;
                 for (int k = 0; k <= i; k++) {
                     delete[] matrix[k];
                 }
@@ -388,7 +388,7 @@ EdgeArray kruskal(EdgeArray& allEdges, const StringArray& vertices) {
 
 void printResult(const EdgeArray& mst) {
     if (mst.isEmpty()) {
-        cout << "Граф не связан или пуст" << endl;
+        cout << "Graph is disconnected or empty" << endl;
         return;
     }
 
@@ -424,12 +424,12 @@ void printResult(const EdgeArray& mst) {
     }
 
     int totalWeight = 0;
-    cout << "\nМинимальное остовное дерево:" << endl;
+    cout << "\nMinimum spanning tree:" << endl;
     for (int i = 0; i < sortedMst.getSize(); i++) {
         cout << sortedMst[i].u << " " << sortedMst[i].v << endl;
         totalWeight += sortedMst[i].weight;
     }
-    cout << "Суммарный вес: " << totalWeight << endl;
+    cout << "Total weight: " << totalWeight << endl;
 }
 
 void freeMatrix(int** matrix, int n) {
@@ -444,11 +444,11 @@ void freeMatrix(int** matrix, int n) {
 int main() {
     setlocale(LC_ALL, "Russian");
 
-    cout << "=== Алгоритм Краскала для поиска минимального остовного дерева ===" << endl;
-    cout << "=== Реализация для курсовой работы ===" << endl;
+    cout << "=== Kruskal's Algorithm for Minimum Spanning Tree ===" << endl;
+    cout << "=== Coursework Implementation ===" << endl;
 
     string filename;
-    cout << "\nВведите имя файла с матрицей смежности: ";
+    cout << "\nEnter the filename with the adjacency matrix: ";
     cin >> filename;
 
     StringArray vertices;
@@ -456,14 +456,14 @@ int main() {
     int** matrix = nullptr;
 
     if (!readGraph(filename, vertices, matrix, edges)) {
-        cout << "Ошибка загрузки графа. Проверьте файл." << endl;
+        cout << "Error loading graph. Please check the file." << endl;
         return 1;
     }
 
     int n = vertices.getSize();
-    cout << "\nЗагружен граф:" << endl;
-    cout << "Вершин: " << n << endl;
-    cout << "Ребер: " << edges.getSize() << endl;
+    cout << "\nGraph loaded:" << endl;
+    cout << "Vertices: " << n << endl;
+    cout << "Edges: " << edges.getSize() << endl;
 
     if (n > 0) {
         bool* visitedDFS = new bool[n];
@@ -474,7 +474,7 @@ int main() {
             visitedBFS[i] = false;
         }
 
-        cout << "\n--- Обходы графа ---" << endl;
+        cout << "\n--- Graph traversals ---" << endl;
         DFS(matrix, vertices, 0, visitedDFS);
         BFS(matrix, vertices, 0, visitedBFS);
 
@@ -482,14 +482,14 @@ int main() {
         delete[] visitedBFS;
     }
 
-    cout << "\n--- Алгоритм Краскала ---" << endl;
+    cout << "\n--- Kruskal's Algorithm ---" << endl;
     EdgeArray mst = kruskal(edges, vertices);
     printResult(mst);
 
     freeMatrix(matrix, n);
 
-    cout << "\nПрограмма успешно завершена!" << endl;
-    cout << "Нажмите Enter для выхода...";
+    cout << "\nProgram completed successfully!" << endl;
+    cout << "Press Enter to exit...";
     cin.ignore();
     cin.get();
 
